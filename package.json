@@ -1,0 +1,26 @@
+{
+  "name": "proxy",
+  "version": "1.0.0",
+  "description": "Proxy to Fake Vue",
+  "main": "index.js",
+  "dependencies": {
+    "webpack": "^4.41.2"
+  },
+  "devDependencies": {
+    "webpack-cli": "^3.3.10"
+  },
+  "scripts": {
+    "build": "webpack",
+    "test": "webpack && node ./dist/test.bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liuzip/proxy.git"
+  },
+  "author": "Oliver",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/liuzip/proxy/issues"
+  },
+  "homepage": "https://github.com/liuzip/proxy#readme"
+}

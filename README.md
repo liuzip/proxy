@@ -6,3 +6,9 @@
   <li>computed</li>
   <li>methods</li>
 </ul>
+
+<b>How to</b>
+
+```javascript
+npm run test
+```

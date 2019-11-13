@@ -1,4 +1,4 @@
-let Vue = function(opts) {
+export default function(opts) {
   let { data, computed, methods } = opts
   let computedMap = new Map() // 用以存储，每个data属性会影响哪些computed值
 
@@ -24,6 +24,7 @@ let Vue = function(opts) {
     set(_1, attr, _2, receiver) {
       // 找到指定的computed，调用对应的函数，从而确定计算指定的computed需要哪些data数据
       computed[attr].call(receiver)
+      return true
     }
   })
 
@@ -57,6 +58,7 @@ let Vue = function(opts) {
             computed[computedAttr] && (receiver[computedAttr] = computed[computedAttr].call(receiver))
           })
         }
+        return true
       }
     })
   
@@ -66,26 +68,3 @@ let Vue = function(opts) {
   return proxied
 }
 
-let instance = Vue({
-  data: {
-    att1: 1,
-    att2: 2
-  },
-  computed: {
-    add() { return this.att1 + this.att2 },
-    minus() { return this.att1 - this.att2 },
-    sum() { return this.add + this.minus }
-  },
-  methods: {
-    multiple() {
-      return this.att1 * this.att2
-    }
-  }
-})
-
-console.log(instance) // { att1: 1, att2: 2, sum: 3, minus: -1 }
-console.log(instance.multiple())
-instance.att1 = 3
-instance.att2 = 5
-console.log(instance) // { att1: 3, att2: 1, sum: 4, minus: 2 }
-console.log(instance.multiple())
