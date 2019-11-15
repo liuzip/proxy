@@ -23,19 +23,19 @@ let instance = Vue({
 })
 
 
+console.log('************************************')
 console.log(instance)
 // console.log(instance.att1)
 // console.log(instance.att2)
-// console.log(instance.add)
-// console.log(instance.minus)
+// console.log(instance)
 // console.log(instance.sum)
 // console.log(instance.multiple())
 // console.log(instance.special)
-console.log(instance.attribute)
+// console.log(instance.attribute)
 
 // instance.att1 = 3
 // instance.att2 = 5
-instance.attribute.val = 5
+// instance.attribute.val = 5
 // console.log('************************************')
 
 // console.log(instance.att1)
@@ -45,7 +45,7 @@ instance.attribute.val = 5
 // console.log(instance.sum)
 // console.log(instance.multiple())
 // console.log(instance.special)
-console.log(instance.attribute)
+// console.log(instance.attribute)
 
 // console.log(instance) // { att1: 1, att2: 2, add: 3, minus: -1, sum: 2, multiple: [Function: multiple] }
 // console.log(instance.multiple()) // 2

@@ -1,43 +1,13 @@
-import { getComputedMap, getOrganizeData, getRecoverData } from './organize'
+import { getComputedMap, proxify } from './organize'
 
-export default function(opts) {
-  let { data, computed, methods } = opts
-  let computedMap = getComputedMap({ data, computed })
-  let organizeData = getOrganizeData(data)
+export default function({ data, computed = {}, methods = {} }) {
+  let assembled = Object.assign({}, JSON.parse(JSON.stringify(data)), computed, methods)
+  let computedMap = getComputedMap(assembled, computed)
 
   // 返回真正提供给用户的Proxy
   // 可读写的，data Proxy
 
-  let readWriteDateProxy = proxify({ __val: organizeData, __path: '' }, {
-    get(target, attr) {
-      let ret = Reflect.get(target, attr)
-
-      if(!ret || !(ret.__val)) return ret
-      else return typeof(ret.__val) === 'object' ? getRecoverData(ret.__val) : ret.__val
-    },
-    set(target, attr, value) {
-      let item = Reflect.get(target, attr)
-      console.log(item)
-
-      if(item && (!item.__val)) {
-        item = value
-      }
-      if(item && item.__path) {
-        console.log(item.__path)
-        let effectArr = computedMap.get(item.__path)
-        if(effectArr) {
-          effectArr.forEach(key => {
-            readOnlyProxy[key] = computed[key].call(proxied)
-          })
-        }
-      }
-
-      return true
-    }
-  }).__val
-
-  // 只读的，computed、methods Proxy
-  let readOnlyProxy = new Proxy(Object.assign({}, computed, methods), {
+  let proxied = proxify(assembled, {
     get(target, attr) {
       if(methods[attr]) {
         return methods[attr].bind(proxied)
@@ -45,30 +15,17 @@ export default function(opts) {
         return Reflect.get(target, attr)
       }
     },
-    set(target, attr, value) {
-      if(methods[attr]) {
-        // 方法不容设定
-        return false
-      } else {
-        Reflect.set(target, attr, value)
-        let effectArr = computedMap.get(attr)
-        if(effectArr) {
-          effectArr.forEach(key => {
-            target[key] = computed[key].call(proxied)
+    set(target, attr, value, receiver) {
+      Reflect.set(target, attr, value)
+      let effectArr = computedMap.get(target)
+      if(effectArr) {
+        let effectedTarget = effectArr.find(item => item.key === attr)
+        if(effectedTarget) {
+          effectedTarget.list.forEach(key => {
+            receiver[key] = computed[key].call(receiver)
           })
         }
-        return true
       }
-    }
-  })
-  
-  let proxied = new Proxy(Object.assign({}, computed, methods, data), {
-    get(_, attr) {
-      return (computed[attr] || methods[attr]) ? Reflect.get(readOnlyProxy, attr) : Reflect.get(readWriteDateProxy, attr)
-    },
-    set(_, attr, value) {
-      let readOnly = Reflect.get(readOnlyProxy, attr)
-      readOnly ? Reflect.set(readOnlyProxy, attr, value) : Reflect.set(readWriteDateProxy, attr, value)
       return true
     }
   })
@@ -86,21 +43,3 @@ function dataSet(data, p) {
   })
 }
 
-function proxify(data, handler) {
-  if(typeof(data.__val) !== 'object') { // string number boolean
-    return data
-  } else if(data.__val instanceof Array){ // array
-    return { __val: new Proxy(data.__val.map(d => proxify(d, handler)), handler), __path: data.__path }
-  } else { // object
-    return {
-            __val: new Proxy(
-                      Object.keys(data.__val).reduce((res, key) => {
-                        res[key] = proxify(data.__val[key], handler)
-                        return res
-                      }, {}),
-                      handler
-                    ),
-            __path: data.__path
-          }
-  }
-}
