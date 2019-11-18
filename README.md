@@ -2,7 +2,7 @@
 
 <b>目前支持</b>
 <ul>
-  <li>一层的data</li>
+  <li>多层得data，但暂不支持Array长度变化检测</li>
   <li>computed</li>
   <li>methods</li>
 </ul>
