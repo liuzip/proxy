@@ -5,8 +5,8 @@ const builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol)
 
 let proxied = {
   instance: null,
-  computedFuncStack: null,
   currentComputedKey: '',
+  currentComputedFunc: null,
   currentWatchKeys: [],
   currentWatchFunc: null,
 }
@@ -19,16 +19,16 @@ export default function({ data, computed = {}, methods = {}, watch = {} }) {
   let assembled = Object.assign({},
               JSON.parse(JSON.stringify(data)), computed, methods)
 
-  proxied.computedFuncStack = computed
-
   proxied.instance = proxify(assembled, proxied) // 创建proxy对象
 
   // 设定computed和data数据之间得依赖关系
   Object.keys(computed).forEach(func => {
     proxied.currentComputedKey = func
-    proxied.instance[func] = computed[func].call(proxied.instance) // 先用默认的数据计算一次
+    proxied.currentComputedFunc = computed[func].bind(proxied.instance)
+    proxied.instance[func] = proxied.currentComputedFunc() // 先用默认的数据计算一次
   })
   delete proxied.currentComputedKey
+  delete proxied.currentComputedFunc
   // 上述位置之所以需要使用默认数据计算一遍，是为了保证如果某一个computed只返回固定的值（例如返回常数，默认的对象，数组的长度等）
   // 即使dataSet数据的时候，不会重新计算这些computed内容，也能够拥有正确的默认值
 
@@ -36,18 +36,16 @@ export default function({ data, computed = {}, methods = {}, watch = {} }) {
   dataSet(data, proxied.instance)
 
   Object.keys(watch).forEach(path => {
-    let keys = []
+    let keys = path.split('.')
     proxied.currentWatchFunc = watch[path].bind(proxied.instance)
-    proxied.currentWatchKeys = (keys = path.split('.'))
-    JSON.stringify(proxied.instance)
-    // keys.reduce((instance, key) => {
-    //   console.log(instance, key)
-    //   console.dir(instance[key])
-    //   return instance[key]
-    // }, proxied.instance)
+    proxied.currentWatchKeys = [...keys]
+    // JSON.stringify(proxied.instance) // 这个方案会去尝试读取不需要的值，简直浪费，算了
+    keys.reduce((instance, key) => instance[key], proxied.instance)
 
     proxied.currentWatchKeys = []
   })
+  delete proxied.currentWatchKeys
+  delete proxied.currentWatchFunc
 
   IS_LOCK = true
 
@@ -80,7 +78,7 @@ function proxify(data, proxied) {
 
         if(proxied.currentComputedKey) {
           // 如果是更新依赖环节，还需要更新依赖关系
-          updateStack(target, property, proxied.currentComputedKey, computedMapStack)
+          updateStack(target, property, { key: proxied.currentComputedKey, func: proxied.currentComputedFunc}, computedMapStack)
         }
       }
 
@@ -99,8 +97,8 @@ function proxify(data, proxied) {
       Reflect.set(target, property, value)
       let updateArr = getItemFromStack(target, property, computedMapStack) // 如果有依赖需要被更新
       if(updateArr !== void 0) {
-        updateArr.forEach(key => { // 更新相应得computed数据
-          Reflect.set(proxied.instance, key, proxied.computedFuncStack[key].call(proxied.instance))
+        updateArr.forEach(computed => { // 更新相应得computed数据
+          Reflect.set(proxied.instance, computed.key, computed.func())
         })
       }
 

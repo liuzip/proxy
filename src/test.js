@@ -48,7 +48,7 @@ console.log(instance)
 //   arrayLength: 3,
 //   multiple: [Function: multiple] }
 
-// console.log(instance.multiple()) // 2
+console.log(instance.multiple()) // 2
 
 instance.att1 = 3
 instance.att2 = 5
@@ -56,7 +56,7 @@ instance.attribute.val = 5 // attribute.val change oldValue:  2 , newValue:  5
 instance.attribute.arr.push(4) // arrayLength change oldValue:  3 , newValue:  4
 console.log('************************************')
 
-// console.log(instance.multiple()) // 15
+console.log(instance.multiple()) // 15
 console.log(instance)
 // { att1: 3,
 //   att2: 5,
