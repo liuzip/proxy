@@ -23,6 +23,11 @@ let instance = Vue({
     multiple() {
       return this.att1 * this.att2
     }
+  },
+  watch: {
+    arrayLength(oldValue, newValue) {
+      console.log('arrayLength change oldValue: ', oldValue, ', newValue: ', newValue)
+    }
   }
 })
 
@@ -45,7 +50,7 @@ console.log(instance)
 instance.att1 = 3
 instance.att2 = 5
 instance.attribute.val = 5
-instance.attribute.arr.push(4)
+instance.attribute.arr.push(4) // arrayLength change oldValue:  3 , newValue:  4
 console.log('************************************')
 
 // console.log(instance.multiple()) // 15
