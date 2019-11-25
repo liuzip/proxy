@@ -6,11 +6,14 @@ const builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol)
 let proxied = {
   instance: null,
   computedFuncStack: null,
-  currentComputedKey: ''
+  currentComputedKey: '',
+  currentWatchKeys: [],
+  currentWatchFunc: null,
 }
 
 let computedMapStack = new Map() // 用于存储data数据和computed数据的映射关系
 let watchMapStack = new Map() // 用于存储watch参数和对应函数的映射关系
+let IS_LOCK = false
 
 export default function({ data, computed = {}, methods = {}, watch = {} }) {
   let assembled = Object.assign({},
@@ -32,7 +35,21 @@ export default function({ data, computed = {}, methods = {}, watch = {} }) {
   // 设定data数据，以更新comupted数据
   dataSet(data, proxied.instance)
 
-  Object.keys(watch).forEach(key => watchMapStack.set(key, watch[key].bind(proxied.instance)))
+  Object.keys(watch).forEach(path => {
+    let keys = []
+    proxied.currentWatchFunc = watch[path].bind(proxied.instance)
+    proxied.currentWatchKeys = (keys = path.split('.'))
+    JSON.stringify(proxied.instance)
+    // keys.reduce((instance, key) => {
+    //   console.log(instance, key)
+    //   console.dir(instance[key])
+    //   return instance[key]
+    // }, proxied.instance)
+
+    proxied.currentWatchKeys = []
+  })
+
+  IS_LOCK = true
 
   return proxied.instance
 }
@@ -52,25 +69,35 @@ function proxify(data, proxied) {
       if(isSymbol(property) && builtInSymbols.has(property))
         return res
 
-      if(typeof(res) === 'object')
-        return proxify(res, proxied) // 子层object也需要监控
-      else {
+      if(!IS_LOCK) {
+        if(proxied.currentWatchKeys[0] === property) {
+          proxied.currentWatchKeys.shift()
+          if(proxied.currentWatchKeys.length === 0) {
+            // watch的最后一层
+            updateStack(target, property, proxied.currentWatchFunc, watchMapStack)
+          }
+        }
+
         if(proxied.currentComputedKey) {
           // 如果是更新依赖环节，还需要更新依赖关系
-          updateStack(target, property, proxied.currentComputedKey)
+          updateStack(target, property, proxied.currentComputedKey, computedMapStack)
         }
-        return res
       }
+
+      if(typeof(res) === 'object')
+        return proxify(res, proxied) // 子层object也需要监控
+      else
+        return res
     },
     set(target, property, value) {
       let oldValue = Reflect.get(target, property)
-      let watchAvailable = watchMapStack.get(property)
+      let watchAvailable = getItemFromStack(target, property, watchMapStack)
       if(watchAvailable) {
-        watchAvailable(oldValue, value)
+        watchAvailable.forEach(func => func(oldValue, value))
       }
 
       Reflect.set(target, property, value)
-      let updateArr = getItemFromStack(target, property) // 如果有依赖需要被更新
+      let updateArr = getItemFromStack(target, property, computedMapStack) // 如果有依赖需要被更新
       if(updateArr !== void 0) {
         updateArr.forEach(key => { // 更新相应得computed数据
           Reflect.set(proxied.instance, key, proxied.computedFuncStack[key].call(proxied.instance))
@@ -90,10 +117,10 @@ function proxify(data, proxied) {
 *   )
 * )
 */
-function updateStack(target, property, key) {
-  let porpertyStack = computedMapStack.get(target)
+function updateStack(target, property, key, stack) {
+  let porpertyStack = stack.get(target)
   if(porpertyStack === void 0)
-    computedMapStack.set(target, (porpertyStack = new Map()))
+    stack.set(target, (porpertyStack = new Map()))
   let dep = porpertyStack.get(property)
   if(dep === void 0)
     porpertyStack.set(property, (dep = new Set()))
@@ -101,8 +128,8 @@ function updateStack(target, property, key) {
     dep.add(key)
 }
 
-function getItemFromStack(target, property) {
-  let porpertyStack = computedMapStack.get(target)
+function getItemFromStack(target, property, stack) {
+  let porpertyStack = stack.get(target)
   if(porpertyStack === void 0) 
     return 
   return porpertyStack.get(property)
