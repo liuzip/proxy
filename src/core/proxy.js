@@ -21,9 +21,11 @@ export default function({ data, computed = {}, methods = {} }) {
   // 设定computed和data数据之间得依赖关系
   Object.keys(computed).forEach(func => {
     proxied.currentComputedKey = func
-    computed[func].call(proxied.instance)
+    proxied.instance[func] = computed[func].call(proxied.instance) // 先用默认的数据计算一次
   })
   delete proxied.currentComputedKey
+  // 上述位置之所以需要使用默认数据计算一遍，是为了保证如果某一个computed只返回固定的值（例如返回常数，默认的对象，数组的长度等）
+  // 即使dataSet数据的时候，不会重新计算这些computed内容，也能够拥有正确的默认值
 
   // 设定data数据，以更新comupted数据
   dataSet(data, proxied.instance)
