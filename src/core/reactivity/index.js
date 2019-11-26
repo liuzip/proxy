@@ -16,8 +16,11 @@ let watchMapStack = new Map() // 用于存储watch参数和对应函数的映射
 let IS_LOCK = false
 
 export default function({ data, computed = {}, methods = {}, watch = {} }) {
-  let assembled = Object.assign({},
-              JSON.parse(JSON.stringify(data)), computed, methods)
+  if(typeof(data) !== 'function') {
+    throw new Error('data should be a function')
+  }
+
+  let assembled = Object.assign({}, data(), computed, methods)
 
   proxied.instance = proxify(assembled, proxied) // 创建proxy对象
 
@@ -33,7 +36,7 @@ export default function({ data, computed = {}, methods = {}, watch = {} }) {
   // 即使dataSet数据的时候，不会重新计算这些computed内容，也能够拥有正确的默认值
 
   // 设定data数据，以更新comupted数据
-  dataSet(data, proxied.instance)
+  dataSet(data(), proxied.instance)
 
   Object.keys(watch).forEach(path => {
     let keys = path.split('.')
@@ -78,7 +81,7 @@ function proxify(data, proxied) {
 
         if(proxied.currentComputedKey) {
           // 如果是更新依赖环节，还需要更新依赖关系
-          updateStack(target, property, { key: proxied.currentComputedKey, func: proxied.currentComputedFunc}, computedMapStack)
+          updateStack(target, property, { key: proxied.currentComputedKey, func: proxied.currentComputedFunc }, computedMapStack)
         }
       }
 

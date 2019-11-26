@@ -4,14 +4,15 @@
   "description": "Proxy to Fake Vue",
   "main": "index.js",
   "dependencies": {
-    "webpack": "^4.41.2"
+    "webpack": "^4.41.2",
+    "webpack-dev-server": "^3.9.0"
   },
   "devDependencies": {
     "webpack-cli": "^3.3.10"
   },
   "scripts": {
     "build": "webpack",
-    "test": "webpack && node ./dist/test.bundle.js"
+    "test": "webpack --config webpack.test.config.js && webpack-dev-server --config webpack.test.config.js --mode development"
   },
   "repository": {
     "type": "git",

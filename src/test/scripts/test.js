@@ -1,16 +1,17 @@
-import Vue from './core/proxy'
-
 const SOURCE_MAP = ['a', 'b', 'c']
 
 let instance = Vue({
-  data: {
-    att1: 1,
-    att2: 2,
-    attribute: {
-      val: 2,
-      arr: [ 1, 2, 3 ]
+  data() {
+    return {
+      att1: 1,
+      att2: 2,
+      attribute: {
+        val: 2,
+        arr: [ 1, 2, 3 ]
+      }
     }
   },
+  template: '<p>test</p>',
   computed: {
     constVal() { return SOURCE_MAP },
     special() { return this.attribute.val + this.attribute.arr[0] },
@@ -37,6 +38,7 @@ let instance = Vue({
 
 console.log('************************************')
 console.log(instance)
+// instance.$mount('app')
 // { att1: 1,
 //   att2: 2,
 //   attribute: { val: 2, arr: [ 1, 2, 3 ] },
