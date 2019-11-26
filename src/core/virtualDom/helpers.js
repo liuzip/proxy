@@ -97,7 +97,7 @@ function parseTemplate(template, start) {
 
 function updateDocument(vd, root) {
   let node = document.createElement(vd.name)
-  node.text = vd.text
+  node.innerText = vd.text
   root.appendChild(node)
   for(let i = 0; i < vd.children.length; i ++) {
     updateDocument(vd.children[i], node)

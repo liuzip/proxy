@@ -12,7 +12,8 @@
   },
   "scripts": {
     "build": "webpack",
-    "test": "webpack --config webpack.test.config.js && webpack-dev-server --config webpack.test.config.js --mode development"
+    "test": "webpack --config webpack.test.config.js --watch",
+    "server": "webpack-dev-server --config webpack.test.config.js --mode development --inline"
   },
   "repository": {
     "type": "git",

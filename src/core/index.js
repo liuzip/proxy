@@ -16,6 +16,6 @@ import { mount } from './virtualDom'
   }
 })(window, function(opts) {
   let Vue = reactivity(opts)
-  Vue.$mount = mount.bind(opts.template)
+  Vue.$mount = mount.bind(null, opts.template)
   return Vue
 })

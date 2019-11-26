@@ -11,6 +11,7 @@ module.exports = {
     contentBase: path.resolve(__dirname + '/src/test'),
     host: 'localhost',
     port: 8080,
-    open: true
+    open: true,
+    inline: true,
   }
 }
