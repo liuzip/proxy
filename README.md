@@ -9,6 +9,15 @@
 
 <b>How to</b>
 
+<b>编译</b>
+
+```javascript
+npm run build
+```
+
+<b>测试</b>
+
 ```javascript
 npm run test
+npm run server
 ```
