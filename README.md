@@ -2,9 +2,11 @@
 
 <b>目前支持</b>
 <ul>
-  <li>多层得data，但暂不支持Array长度变化检测</li>
+  <li>data</li>
   <li>computed</li>
   <li>methods</li>
+  <li>watch</li>
+  <li>template update（优化中）</li>
 </ul>
 
 <b>How to</b>
