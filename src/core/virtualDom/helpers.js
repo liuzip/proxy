@@ -97,13 +97,52 @@ function parseTemplate(template, start) {
 
 function updateDocument(vd, root) {
   let node = document.createElement(vd.name)
-  node.innerText = vd.text
+  node.innerText = getDataValue.call(this, vd.text)
   root.appendChild(node)
   for(let i = 0; i < vd.children.length; i ++) {
-    updateDocument(vd.children[i], node)
+    updateDocument.call(this, vd.children[i], node)
   }
 }
 
 function diff() {
   return false
+}
+
+// helpers
+function getDataValue(text) {
+  let ret = ''
+  let equation = ''
+  let shouldGetVueData = false
+  for(let i = 0; i < text.length; i ++) {
+    if(!shouldGetVueData) {
+      if(text[i] === '{' && text[i + 1] === '{') { // 开始查找Vue里得数据
+        shouldGetVueData = true
+        i += 1
+      } else {
+        ret += text[i] // 纯粹得text数据
+      }
+    }
+    else {
+      if(text[i] === '}' && text[i + 1] === '}') { // 读取完毕path，从Vue里查值
+        shouldGetVueData = false
+        i += 1
+        ret += getObjectValue(this, equation)
+        equation = ''
+      } else 
+      equation += text[i] === ' ' ? '' : text[i] // 读取path
+    }
+  }
+
+  return ret
+}
+
+function getObjectValue(obj, equation) {
+  var __res$1 = ''
+  eval(`${ Object.keys(obj)
+            .reduce((str, key) => {
+              str += typeof(obj[key]) !== 'function' ?
+                      `var ${ key }=${ typeof(obj[key]) === 'object' ? JSON.stringify(obj[key]) : obj[key] };` : ''
+              return str
+            }, '')}; __res$1 = ${ equation };`)
+  return __res$1
 }
