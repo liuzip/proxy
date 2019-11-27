@@ -1,5 +1,5 @@
 import reactivity from './reactivity'
-import { mount } from './virtualDom'
+import { mount, update } from './virtualDom'
 
 (function(root, factory) {
   if (typeof define === 'function' && (define.amd || define.cmd)) {
@@ -15,7 +15,9 @@ import { mount } from './virtualDom'
     root.Vue = factory
   }
 })(window, function(opts) {
-  let Vue = reactivity(opts)
+  let Vue = null
+  Vue = reactivity(opts, update.bind(Vue, opts.template))
   Vue.$mount = mount.bind(Vue, opts.template)
+  Vue.$forceUpdate = update.bind(Vue, opts.template)
   return Vue
 })

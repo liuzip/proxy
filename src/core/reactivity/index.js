@@ -15,14 +15,14 @@ let computedMapStack = new Map() // 用于存储data数据和computed数据的�
 let watchMapStack = new Map() // 用于存储watch参数和对应函数的映射关系
 let IS_LOCK = false
 
-export default function({ data, computed = {}, methods = {}, watch = {} }) {
+export default function({ data, computed = {}, methods = {}, watch = {} }, update) {
   if(typeof(data) !== 'function') {
     throw new Error('data should be a function')
   }
 
   let assembled = Object.assign({}, data(), computed, methods)
 
-  proxied.instance = proxify(assembled, proxied) // 创建proxy对象
+  proxied.instance = proxify(assembled, proxied, update) // 创建proxy对象
 
   // 设定computed和data数据之间得依赖关系
   Object.keys(computed).forEach(func => {
@@ -62,7 +62,7 @@ function dataSet(data, p) {
   })
 }
 
-function proxify(data, proxied) {
+function proxify(data, proxied, update) {
   return new Proxy(data, {
     get(target, property, receiver) {
       let res = Reflect.get(target, property, receiver)
@@ -86,7 +86,7 @@ function proxify(data, proxied) {
       }
 
       if(typeof(res) === 'object')
-        return proxify(res, proxied) // 子层object也需要监控
+        return proxify(res, proxied, update) // 子层object也需要监控
       else
         return res
     },
@@ -104,6 +104,9 @@ function proxify(data, proxied) {
           Reflect.set(proxied.instance, computed.key, computed.func())
         })
       }
+
+      if(IS_LOCK && !!update)
+        update()
 
       return true
     }

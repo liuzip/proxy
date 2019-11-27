@@ -1,7 +1,8 @@
 export {
   diff,
   parseTemplate,
-  updateDocument
+  updateDocument,
+  clearDocument
 }
 
 function parseTemplate(template, start) {
@@ -95,6 +96,11 @@ function parseTemplate(template, start) {
   return tag
 }
 
+function clearDocument(root) {
+  if(root && root.children && root.children.length > 0)
+    root.removeChild(root.children[0])
+}
+
 function updateDocument(vd, root) {
   let node = document.createElement(vd.name)
   node.innerText = getDataValue.call(this, vd.text)
@@ -105,7 +111,7 @@ function updateDocument(vd, root) {
 }
 
 function diff() {
-  return false
+  return true
 }
 
 // helpers
@@ -126,7 +132,7 @@ function getDataValue(text) {
       if(text[i] === '}' && text[i + 1] === '}') { // 读取完毕path，从Vue里查值
         shouldGetVueData = false
         i += 1
-        ret += getObjectValue(this, equation)
+        ret += getEquatEionValue(this, equation)
         equation = ''
       } else 
       equation += text[i] === ' ' ? '' : text[i] // 读取path
@@ -136,7 +142,7 @@ function getDataValue(text) {
   return ret
 }
 
-function getObjectValue(obj, equation) {
+function getEquatEionValue(obj, equation) {
   var __res$1 = ''
   eval(`${ Object.keys(obj)
             .reduce((str, key) => {
