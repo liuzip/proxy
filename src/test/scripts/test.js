@@ -11,7 +11,7 @@ let app = Vue({
       }
     }
   },
-  template: '<ul><li>att1 {{ att1 }}</li><li>2</li><li>attribute.val {{ attribute.val + add * arrayLength }}</li></ul>',
+  template: '<ul><li>att1 {{ att1 }}</li><li>{{ attribute.val }}</li><li>attribute.val {{ attribute.val + add * arrayLength }}</li></ul>',
   computed: {
     constVal() { return SOURCE_MAP },
     special() { return this.attribute.val + this.attribute.arr[0] },

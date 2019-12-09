@@ -1,9 +1,7 @@
 export {
-  diff,
   VIRTUAL_DOM,
   parseTemplate,
   updateDocument,
-  clearDocument
 }
 
 interface POSITION { start: number, end: number }
@@ -11,20 +9,24 @@ interface POSITION { start: number, end: number }
 interface VIRTUAL_DOM {
   name: string
   text: string
-  position: POSITION,
-  children: Array<VIRTUAL_DOM>,
   closed: boolean, // 是否执行完了闭合标签
-  attribute: any,
+  attribute: any, // 对应得attribute属性
+  textValue: string // text对应得具体内容
+  position: POSITION, // 在template中得位置
+  children: Array<VIRTUAL_DOM>, // 子节点
+  documentNode: any, // node节点
 }
 
 function parseTemplate(template: string, start: number): VIRTUAL_DOM {
   let tag: VIRTUAL_DOM = {
     name: '',
     text: '',
-    position: { start, end: 0 },
     children: [],
-    closed: false, // 是否执行完了闭合标签
+    closed: false,
+    textValue: '',
     attribute: {},
+    documentNode: null,
+    position: { start, end: 0 },
   }
   let currentPositon: string = 'empty' // empty tag content
 
@@ -44,6 +46,7 @@ function parseTemplate(template: string, start: number): VIRTUAL_DOM {
         } else if(template[j] === '/' && template[j + 1] === '>') {
           tag.closed = true // 形如“<div/>”当前tag已经封闭
           tag.position.end = j + 1
+          tag.textValue = getDataValue.call(this, tag.text)
           return tag
         } else
           tag.name += template[j]
@@ -53,6 +56,7 @@ function parseTemplate(template: string, start: number): VIRTUAL_DOM {
       if(template[i] === '/' && template[i + 1] === '>') {
         tag.closed = true // 形如“<div asd="123" />”当前tag已经封闭
         tag.position.end = i + 1
+        tag.textValue = getDataValue.call(this, tag.text)
         return tag
       } else if(template[i] === ' ') {
         // 跳过attribute之间的空格
@@ -93,9 +97,10 @@ function parseTemplate(template: string, start: number): VIRTUAL_DOM {
           template.substr((i + 2), tag.name.length) === tag.name ) {
         tag.closed = true // 形如“</div>”，当前tag已经封闭
         tag.position.end = i + tag.name.length + 2
+        tag.textValue = getDataValue.call(this, tag.text)
         return tag
       } else if(template[i] === '<' && template[i + 1] !== '/') {
-        let subNode: VIRTUAL_DOM = parseTemplate(template, i)
+        let subNode: VIRTUAL_DOM = parseTemplate.call(this, template, i)
         tag.children.push(subNode)
         i = subNode.position.end
       } else {
@@ -105,29 +110,57 @@ function parseTemplate(template: string, start: number): VIRTUAL_DOM {
   }
 
   tag.position.end = template.length - 1
+  tag.textValue = getDataValue.call(this, tag.text)
   return tag
 }
 
-function clearDocument(root: any): void {
+function updateDocument(newVd: VIRTUAL_DOM, oldVd: VIRTUAL_DOM, root: any, initiate: boolean): void {
+  if(initiate) {
+    clearRootDocument(root)
+    createNewDocument(newVd, root)
+  } else
+    updateExistedDocument(newVd, oldVd)
+}
+
+// helpers
+function createNewDocument(vd: VIRTUAL_DOM, root: any): void {
+  let node: any = document.createElement(vd.name)
+  node.innerText = vd.textValue
+  vd.documentNode = node // 找到对应得node节点
+  root.appendChild(node)
+  for(let i: number = 0; i < vd.children.length; i ++) {
+    createNewDocument.call(this, vd.children[i], node)
+  }
+}
+
+function updateExistedDocument(newVd: VIRTUAL_DOM, oldVd: VIRTUAL_DOM): void {
+  if(isSame(newVd, oldVd)) { // 节点是否相同
+    for(let i: number = 0; i < newVd.children.length; i ++) {
+      newVd.children[i].documentNode = oldVd.children[i].documentNode // 相同得化，旧节点不再处理，去找子节点
+      updateExistedDocument(newVd.children[i], oldVd.children[i])
+    }
+  } else { // 一旦当前节点有不同，更新当前节点得所有剩余节点
+    let node: any = document.createElement(newVd.name)
+    node.innerText = newVd.textValue
+    newVd.documentNode = node
+    oldVd.documentNode.replaceWith(node) // 替换当前节点
+    for(let i: number = 0; i < newVd.children.length; i ++) {
+      createNewDocument(newVd.children[i], node) // 更新子节点
+    }
+  }
+}
+
+function isSame(n1: VIRTUAL_DOM, n2: VIRTUAL_DOM): boolean {
+  return (n1.name === n2.name) && // same tag
+          (n1.textValue === n2.textValue) // same text
+}
+
+// 将指定得root节点全部给清理干净
+function clearRootDocument(root: any): void {
   if(root && root.children && root.children.length > 0)
     root.removeChild(root.children[0])
 }
 
-function updateDocument(vd: VIRTUAL_DOM, root: any): void {
-  let node: any = document.createElement(vd.name)
-  node.innerText = getDataValue.call(this, vd.text)
-  root.appendChild(node)
-  for(let i: number = 0; i < vd.children.length; i ++) {
-    updateDocument.call(this, vd.children[i], node)
-  }
-}
-
-function diff(t1: VIRTUAL_DOM, t2: VIRTUAL_DOM): boolean {
-  console.log(t1, t2)
-  return true
-}
-
-// helpers
 function getDataValue(text: string): string {
   let ret: string = ''
   let equation: string = ''
@@ -155,13 +188,18 @@ function getDataValue(text: string): string {
   return ret
 }
 
-function getEquatEionValue(obj: any, equation: string) {
-  var __res$1 = ''
+function getEquatEionValue(obj: any, equation: string): string {
+  if(!obj) 
+    return ''
+
+  // 计算text值
+  // TODO，每次将所有内容全部写入eval，实在浪费
+  let __res$1: any = ''
   eval(`${ Object.keys(obj)
             .reduce((str, key) => {
               str += typeof(obj[key]) !== 'function' ?
-                      `var ${ key }=${ typeof(obj[key]) === 'object' ? JSON.stringify(obj[key]) : obj[key] };` : ''
+                      `let ${ key }=${ typeof(obj[key]) === 'object' ? JSON.stringify(obj[key]) : obj[key] };` : ''
               return str
-            }, '')}; __res$1 = ${ equation };`)
-  return __res$1
+            }, '') }; __res$1 = ${ equation };`)
+  return <string>__res$1
 }

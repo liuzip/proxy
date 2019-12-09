@@ -6,8 +6,8 @@ import { mount, update } from './virtualDom/index'
   root.Vue = factory
 })(window, function(opts: VUE): object {
   let Vue = null
-  Vue = reactivity(opts, update.bind(Vue, opts.template))
+  Vue = reactivity(opts, update(opts.template))
   Vue.$mount = mount.bind(Vue, opts.template)
-  Vue.$forceUpdate = update.bind(Vue, opts.template)
+  Vue.$forceUpdate = update(opts.template)
   return Vue
 })
