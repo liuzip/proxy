@@ -3,7 +3,7 @@ const { CheckerPlugin } = require('awesome-typescript-loader')
 
 module.exports = {
   mode: 'production',
-  entry: './src/core/index.js',
+  entry: './src/core/index.ts',
   output: {
     path: path.resolve(__dirname + '/dist'),
     filename: 'core.bundle.js'

@@ -3,7 +3,7 @@ const { CheckerPlugin } = require('awesome-typescript-loader')
 
 module.exports = {
   mode: 'development',
-  entry: './src/core/index.js',
+  entry: './src/core/index.ts',
   output: {
     path: path.resolve(__dirname + '/src/test/dist'),
     filename: 'core.bundle.js'
@@ -15,6 +15,7 @@ module.exports = {
     open: true,
     inline: true,
   },
+  devtool: 'source-map',
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx']
   },

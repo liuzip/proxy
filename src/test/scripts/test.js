@@ -35,7 +35,6 @@ let app = Vue({
   }
 })
 
-
 // console.log('************************************')
 // console.log(app)
 app.$mount('app')
@@ -70,3 +69,5 @@ app.$mount('app')
 //   sum: 6,
 //   arrayLength: 4,
 //   multiple: [Function: multiple] }
+
+setInterval(() => app.att1 = app.att1 > 100 ? 0 : app.att1 + 1, 1000)

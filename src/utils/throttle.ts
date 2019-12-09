@@ -1,9 +1,9 @@
-export default function(timeOffset = 500) {
-  let lastHandlerTS = Date.now()
-  let timeoutIndex = null
+export default function(timeOffset: number = 500): Function {
+  let lastHandlerTS: number = Date.now()
+  let timeoutIndex: any = 0
 
-  return function handler(callback) {
-    let now = Date.now()
+  return function handler(callback: Function) {
+    let now: number = Date.now()
 
     if(timeoutIndex)
       clearTimeout(timeoutIndex)

@@ -4,9 +4,9 @@
   "description": "Proxy to Fake Vue",
   "main": "index.js",
   "dependencies": {
+    "awesome-typescript-loader": "^5.2.1",
     "typescript": "^3.7.3",
     "webpack": "^4.41.2",
-    "awesome-typescript-loader": "^5.2.1",
     "webpack-cli": "^3.3.10"
   },
   "devDependencies": {
