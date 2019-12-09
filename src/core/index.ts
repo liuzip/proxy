@@ -1,10 +1,10 @@
-import { VUE } from './interface/index'
+import { VUE_INTERFACE } from './interface/index'
 import reactivity from './reactivity/index'
 import { mount, update } from './virtualDom/index'
 
 (function(root: any, factory: Function) {
   root.Vue = factory
-})(window, function(opts: VUE): object {
+})(window, function(opts: VUE_INTERFACE): object {
   let Vue = null
   Vue = reactivity(opts, update(opts.template))
   Vue.$mount = mount.bind(Vue, opts.template)

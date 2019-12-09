@@ -1,11 +1,11 @@
-import { PROXIED, VUE } from '../interface/index'
+import { PROXIED_INTERFACE, VUE_INTERFACE } from '../interface/index'
 
 const isSymbol = (val: any) => typeof val === 'symbol'
 const builtInSymbols = new Set(Object.getOwnPropertyNames(Symbol)
       .map((key: string): any => (Symbol as any)[key])
       .filter(isSymbol))
 
-let proxied: PROXIED = {
+let proxied: PROXIED_INTERFACE = {
   instance: null,
   currentComputedKey: '',
   currentComputedFunc: null,
@@ -17,7 +17,7 @@ let computedMapStack = new Map() // 用于存储data数据和computed数据的�
 let watchMapStack = new Map() // 用于存储watch参数和对应函数的映射关系
 let IS_LOCK = false
 
-export default function({ data, computed = {}, methods = {}, watch = {} }: VUE, update: Function) {
+export default function({ data, computed = {}, methods = {}, watch = {} }: VUE_INTERFACE, update: Function) {
   let assembled = Object.assign({}, data(), computed, methods)
 
   proxied.instance = proxify(assembled, proxied, update) // 创建proxy对象
@@ -61,7 +61,7 @@ function dataSet(data: any, p: any) {
   })
 }
 
-function proxify(data: any, proxied: PROXIED, update: Function): any {
+function proxify(data: any, proxied: PROXIED_INTERFACE, update: Function): any {
   return new Proxy(data, {
     get(target: any, property: string, receiver: any) {
       let res = Reflect.get(target, property, receiver)

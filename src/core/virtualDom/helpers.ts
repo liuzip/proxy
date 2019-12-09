@@ -1,24 +1,24 @@
 export {
-  VIRTUAL_DOM,
+  VIRTUAL_DOM_INTERFACE,
   parseTemplate,
   updateDocument,
 }
 
-interface POSITION { start: number, end: number }
+interface POSITION_INTERFACE { start: number, end: number }
 
-interface VIRTUAL_DOM {
+interface VIRTUAL_DOM_INTERFACE {
   name: string
   text: string
   closed: boolean, // 是否执行完了闭合标签
   attribute: any, // 对应得attribute属性
   textValue: string // text对应得具体内容
-  position: POSITION, // 在template中得位置
-  children: Array<VIRTUAL_DOM>, // 子节点
+  position: POSITION_INTERFACE, // 在template中得位置
+  children: Array<VIRTUAL_DOM_INTERFACE>, // 子节点
   documentNode: any, // node节点
 }
 
-function parseTemplate(template: string, start: number): VIRTUAL_DOM {
-  let tag: VIRTUAL_DOM = {
+function parseTemplate(template: string, start: number): VIRTUAL_DOM_INTERFACE {
+  let tag: VIRTUAL_DOM_INTERFACE = {
     name: '',
     text: '',
     children: [],
@@ -100,7 +100,7 @@ function parseTemplate(template: string, start: number): VIRTUAL_DOM {
         tag.textValue = getDataValue.call(this, tag.text)
         return tag
       } else if(template[i] === '<' && template[i + 1] !== '/') {
-        let subNode: VIRTUAL_DOM = parseTemplate.call(this, template, i)
+        let subNode: VIRTUAL_DOM_INTERFACE = parseTemplate.call(this, template, i)
         tag.children.push(subNode)
         i = subNode.position.end
       } else {
@@ -114,7 +114,7 @@ function parseTemplate(template: string, start: number): VIRTUAL_DOM {
   return tag
 }
 
-function updateDocument(newVd: VIRTUAL_DOM, oldVd: VIRTUAL_DOM, root: any, initiate: boolean): void {
+function updateDocument(newVd: VIRTUAL_DOM_INTERFACE, oldVd: VIRTUAL_DOM_INTERFACE, root: any, initiate: boolean): void {
   if(initiate) {
     clearRootDocument(root)
     createNewDocument(newVd, root)
@@ -123,34 +123,53 @@ function updateDocument(newVd: VIRTUAL_DOM, oldVd: VIRTUAL_DOM, root: any, initi
 }
 
 // helpers
-function createNewDocument(vd: VIRTUAL_DOM, root: any): void {
-  let node: any = document.createElement(vd.name)
-  node.innerText = vd.textValue
-  vd.documentNode = node // 找到对应得node节点
-  root.appendChild(node)
+function createNewDocument(vd: VIRTUAL_DOM_INTERFACE, root: any): void {
+  vd.documentNode = createDocumentNode(vd) // 找到对应得node节点
+  root.appendChild(vd.documentNode)
   for(let i: number = 0; i < vd.children.length; i ++) {
-    createNewDocument.call(this, vd.children[i], node)
+    createNewDocument.call(this, vd.children[i], vd.documentNode)
   }
 }
 
-function updateExistedDocument(newVd: VIRTUAL_DOM, oldVd: VIRTUAL_DOM): void {
+function updateExistedDocument(newVd: VIRTUAL_DOM_INTERFACE, oldVd: VIRTUAL_DOM_INTERFACE): void {
   if(isSame(newVd, oldVd)) { // 节点是否相同
     for(let i: number = 0; i < newVd.children.length; i ++) {
       newVd.children[i].documentNode = oldVd.children[i].documentNode // 相同得化，旧节点不再处理，去找子节点
       updateExistedDocument(newVd.children[i], oldVd.children[i])
     }
   } else { // 一旦当前节点有不同，更新当前节点得所有剩余节点
-    let node: any = document.createElement(newVd.name)
-    node.innerText = newVd.textValue
-    newVd.documentNode = node
-    oldVd.documentNode.replaceWith(node) // 替换当前节点
+    newVd.documentNode = createDocumentNode(newVd)
+    oldVd.documentNode.replaceWith(newVd.documentNode) // 替换当前节点
     for(let i: number = 0; i < newVd.children.length; i ++) {
-      createNewDocument(newVd.children[i], node) // 更新子节点
+      createNewDocument(newVd.children[i], newVd.documentNode) // 更新子节点
     }
   }
 }
 
-function isSame(n1: VIRTUAL_DOM, n2: VIRTUAL_DOM): boolean {
+interface ATTRIBUTE_MAP_INTERFACE {
+  'class': Function
+}
+
+const ATTRIBUTE_MAP: ATTRIBUTE_MAP_INTERFACE = {
+  'class': (classStr: string, dom: any) => {
+    classStr.split(' ').forEach(val => dom.classList.add(val.trim()))
+  }
+}
+
+function createDocumentNode(vd: VIRTUAL_DOM_INTERFACE): any {
+  let dom: any = document.createElement(vd.name)
+  dom.innerText = vd.textValue
+
+  Object.keys(vd.attribute).forEach((key: string) => {
+    if(typeof((ATTRIBUTE_MAP as any)[key]) === 'function') {
+      (ATTRIBUTE_MAP as any)[key](vd.attribute[key], dom)
+    }
+  })
+
+  return dom
+}
+
+function isSame(n1: VIRTUAL_DOM_INTERFACE, n2: VIRTUAL_DOM_INTERFACE): boolean {
   return (n1.name === n2.name) && // same tag
           (n1.textValue === n2.textValue) // same text
 }

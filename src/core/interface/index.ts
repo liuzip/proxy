@@ -1,4 +1,4 @@
-export interface PROXIED {
+export interface PROXIED_INTERFACE {
   instance: any
   currentComputedKey: string
   currentComputedFunc?: Function
@@ -6,7 +6,7 @@ export interface PROXIED {
   currentWatchFunc?: Function
 }
 
-export interface VUE {
+export interface VUE_INTERFACE {
   watch: any
   methods: any
   computed: any
