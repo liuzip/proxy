@@ -17,105 +17,109 @@ interface VIRTUAL_DOM_INTERFACE {
   documentNode: any, // node节点
 }
 
-function parseTemplate(template: string, start: number): VIRTUAL_DOM_INTERFACE {
-  let tag: VIRTUAL_DOM_INTERFACE = {
-    name: '',
-    text: '',
-    children: [],
-    closed: false,
-    textValue: '',
-    attribute: {},
-    documentNode: null,
-    position: { start, end: 0 },
-  }
-  let currentPositon: string = 'empty' // empty tag content
+function parseTemplate(target: any): Function {
+  let getValue = getDataValue(target)
 
-  for(let i: number = start; i < template.length; i ++) {
-    if(template[i] === '<' && currentPositon === 'empty') {
-      // 最外层碰到了箭头
-      currentPositon = 'tag'
-      // 取得tagName
-      for(let j: number = (i + 1); j < template.length; j ++) {
-        if(template[j] === ' ') {
-          i = j // 形如"<div "
-          break
-        } else if(template[j] === '>') {
-          i = j // 形如<div>"
-          currentPositon = 'content'
-          break
-        } else if(template[j] === '/' && template[j + 1] === '>') {
-          tag.closed = true // 形如“<div/>”当前tag已经封闭
-          tag.position.end = j + 1
-          tag.textValue = getDataValue.call(this, tag.text)
-          return tag
-        } else
-          tag.name += template[j]
-      }
-      continue
-    } else if(currentPositon === 'tag') {
-      if(template[i] === '/' && template[i + 1] === '>') {
-        tag.closed = true // 形如“<div asd="123" />”当前tag已经封闭
-        tag.position.end = i + 1
-        tag.textValue = getDataValue.call(this, tag.text)
-        return tag
-      } else if(template[i] === ' ') {
-        // 跳过attribute之间的空格
-        continue
-      } else if(template[i] === '>') {
-        currentPositon = 'content' // tag前半部分已完结
-        continue
-      } else {
-        // 处理attribute
-        let attributeName: string = ''
-        let attributeValue: string = ''
-        let startQuote: string = ''
-        let isHandleValue: boolean = false
-        let j: number = i
+  return function parseWithThis(template: string, start: number = 0): VIRTUAL_DOM_INTERFACE {
+    let tag: VIRTUAL_DOM_INTERFACE = {
+      name: '',
+      text: '',
+      children: [],
+      closed: false,
+      textValue: '',
+      attribute: {},
+      documentNode: null,
+      position: { start, end: 0 },
+    }
+    let currentPositon: string = 'empty' // empty tag content
   
-        for(; j < template.length; j ++) {
-          if(!isHandleValue) {
-            if(template[j] === '=')
-              isHandleValue = true // 开始处理属性值
-            else if(template[j] !== ' ')
-              attributeName += template[j]
-          } else {
-            if(!startQuote && (template[j] === "'" || template[j] === '"'))
-              startQuote = template[j] // 找到属性值的开始
-            else if(startQuote && startQuote === template[j])
-              break // 属性值结束
-            else
-              attributeValue += template[j]
-          }
+    for(let i: number = start; i < template.length; i ++) {
+      if(template[i] === '<' && currentPositon === 'empty') {
+        // 最外层碰到了箭头
+        currentPositon = 'tag'
+        // 取得tagName
+        for(let j: number = (i + 1); j < template.length; j ++) {
+          if(template[j] === ' ') {
+            i = j // 形如"<div "
+            break
+          } else if(template[j] === '>') {
+            i = j // 形如<div>"
+            currentPositon = 'content'
+            break
+          } else if(template[j] === '/' && template[j + 1] === '>') {
+            tag.closed = true // 形如“<div/>”当前tag已经封闭
+            tag.position.end = j + 1
+            tag = getValue(tag)
+            return tag
+          } else
+            tag.name += template[j]
         }
-  
-        i = j
-        tag.attribute[attributeName] = attributeValue // 添加一个属性
         continue
-      }
-    } else if(currentPositon === 'content') {
-      if(template[i] === '<' && template[i + 1] === '/' && template[i + 2 + tag.name.length] === '>' &&
-          template.substr((i + 2), tag.name.length) === tag.name ) {
-        tag.closed = true // 形如“</div>”，当前tag已经封闭
-        tag.position.end = i + tag.name.length + 2
-        tag.textValue = getDataValue.call(this, tag.text)
-        return tag
-      } else if(template[i] === '<' && template[i + 1] !== '/') {
-        let subNode: VIRTUAL_DOM_INTERFACE = parseTemplate.call(this, template, i)
-        tag.children.push(subNode)
-        i = subNode.position.end
-      } else {
-        tag.text += template[i]
+      } else if(currentPositon === 'tag') {
+        if(template[i] === '/' && template[i + 1] === '>') {
+          tag.closed = true // 形如“<div asd="123" />”当前tag已经封闭
+          tag.position.end = i + 1
+          tag = getValue(tag)
+          return tag
+        } else if(template[i] === ' ') {
+          // 跳过attribute之间的空格
+          continue
+        } else if(template[i] === '>') {
+          currentPositon = 'content' // tag前半部分已完结
+          continue
+        } else {
+          // 处理attribute
+          let attributeName: string = ''
+          let attributeValue: string = ''
+          let startQuote: string = ''
+          let isHandleValue: boolean = false
+          let j: number = i
+    
+          for(; j < template.length; j ++) {
+            if(!isHandleValue) {
+              if(template[j] === '=')
+                isHandleValue = true // 开始处理属性值
+              else if(template[j] !== ' ')
+                attributeName += template[j]
+            } else {
+              if(!startQuote && (template[j] === "'" || template[j] === '"'))
+                startQuote = template[j] // 找到属性值的开始
+              else if(startQuote && startQuote === template[j])
+                break // 属性值结束
+              else
+                attributeValue += template[j]
+            }
+          }
+    
+          i = j
+          tag.attribute[attributeName] = attributeValue // 添加一个属性
+          continue
+        }
+      } else if(currentPositon === 'content') {
+        if(template[i] === '<' && template[i + 1] === '/' && template[i + 2 + tag.name.length] === '>' &&
+            template.substr((i + 2), tag.name.length) === tag.name ) {
+          tag.closed = true // 形如“</div>”，当前tag已经封闭
+          tag.position.end = i + tag.name.length + 2
+          tag = getValue(tag)
+          return tag
+        } else if(template[i] === '<' && template[i + 1] !== '/') {
+          let subNode: VIRTUAL_DOM_INTERFACE = parseWithThis(template, i)
+          tag.children.push(subNode)
+          i = subNode.position.end
+        } else {
+          tag.text += template[i]
+        }
       }
     }
+  
+    tag.position.end = template.length - 1
+    tag = getValue(tag)
+    return tag
   }
-
-  tag.position.end = template.length - 1
-  tag.textValue = getDataValue.call(this, tag.text)
-  return tag
 }
 
-function updateDocument(newVd: VIRTUAL_DOM_INTERFACE, oldVd: VIRTUAL_DOM_INTERFACE, root: any, initiate: boolean): void {
-  if(initiate) {
+function updateDocument(newVd: VIRTUAL_DOM_INTERFACE, oldVd: VIRTUAL_DOM_INTERFACE, root: any): void {
+  if(!oldVd) {
     clearRootDocument(root)
     createNewDocument(newVd, root)
   } else
@@ -127,7 +131,7 @@ function createNewDocument(vd: VIRTUAL_DOM_INTERFACE, root: any): void {
   vd.documentNode = createDocumentNode(vd) // 找到对应得node节点
   root.appendChild(vd.documentNode)
   for(let i: number = 0; i < vd.children.length; i ++) {
-    createNewDocument.call(this, vd.children[i], vd.documentNode)
+    createNewDocument(vd.children[i], vd.documentNode)
   }
 }
 
@@ -180,44 +184,56 @@ function clearRootDocument(root: any): void {
     root.removeChild(root.children[0])
 }
 
-function getDataValue(text: string): string {
-  let ret: string = ''
-  let equation: string = ''
-  let shouldGetVueData: boolean = false
-  for(let i: number = 0; i < text.length; i ++) {
-    if(!shouldGetVueData) {
-      if(text[i] === '{' && text[i + 1] === '{') { // 开始查找Vue里得数据
-        shouldGetVueData = true
-        i += 1
-      } else {
-        ret += text[i] // 纯粹得text数据
+function getDataValue(target: any): Function {
+  return function(tag: VIRTUAL_DOM_INTERFACE): VIRTUAL_DOM_INTERFACE {
+    let text: string = '' // 记录一段读取到得值
+    let equation: string = '' // 待计算得等式
+    let textArray: string[] = [] // 数字记录计算得结果
+    let innerText: string = tag.text // text数据
+    let shouldGetVueData: boolean = false // 是否text数据还是Vue映射得数据
+
+    for(let i: number = 0; i < innerText.length; i ++) {
+      if(!shouldGetVueData) {
+        if(innerText[i] === '{' && innerText[i + 1] === '{') { // 开始查找Vue里得数据
+          shouldGetVueData = true
+          textArray.push(text) // 记录一次数据
+          text = ''
+          i += 1
+        } else {
+          text += innerText[i] // 纯粹得text数据
+        }
+      }
+      else {
+        if(innerText[i] === '}' && innerText[i + 1] === '}') { // 读取完毕path，从Vue里查值
+          shouldGetVueData = false
+          i += 1
+          textArray.push(getEquatEionValue(target, equation))
+          equation = ''
+        } else 
+          equation += innerText[i] === ' ' ? '' : innerText[i] // 读取path
       }
     }
-    else {
-      if(text[i] === '}' && text[i + 1] === '}') { // 读取完毕path，从Vue里查值
-        shouldGetVueData = false
-        i += 1
-        ret += getEquatEionValue(this, equation)
-        equation = ''
-      } else 
-      equation += text[i] === ' ' ? '' : text[i] // 读取path
-    }
-  }
 
-  return ret
+    if(text)
+      textArray.push(text)
+
+    tag.textValue = textArray.join('')
+
+    return tag
+  }
 }
 
-function getEquatEionValue(obj: any, equation: string): string {
-  if(!obj) 
+function getEquatEionValue(target: any, equation: string): string {
+  if(!target) 
     return ''
 
   // 计算text值
   // TODO，每次将所有内容全部写入eval，实在浪费
   let __res$1: any = ''
-  eval(`${ Object.keys(obj)
+  eval(`${ Object.keys(target)
             .reduce((str, key) => {
-              str += typeof(obj[key]) !== 'function' ?
-                      `let ${ key }=${ typeof(obj[key]) === 'object' ? JSON.stringify(obj[key]) : obj[key] };` : ''
+              str += typeof(target[key]) !== 'function' ?
+                      `let ${ key }=${ typeof(target[key]) === 'object' ? JSON.stringify(target[key]) : target[key] };` : ''
               return str
             }, '') }; __res$1 = ${ equation };`)
   return <string>__res$1

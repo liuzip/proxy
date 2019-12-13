@@ -1,9 +1,10 @@
 export interface PROXIED_INTERFACE {
   instance: any
-  currentComputedKey: string
-  currentComputedFunc?: Function
+  updateFunc: Function
+  currentComputedKey: String
   currentWatchKeys: string[]
   currentWatchFunc?: Function
+  currentComputedFunc?: Function
 }
 
 export interface VUE_INTERFACE {
@@ -13,5 +14,5 @@ export interface VUE_INTERFACE {
   data: Function
   template: string
   $mount: Function
-  $forceUpdate: Function
+  // $forceUpdate: Function
 }

@@ -4,22 +4,21 @@ import throttle from '../../utils/throttle'
 let virturalDom: VIRTUAL_DOM_INTERFACE = null
 let rootDom: any = null
 let updateThrottle: Function = throttle(16)
-let Vue$1: any = null
 
-function mount(template: string, id: string) {
-  rootDom = document.getElementById(id)
-  if(this)
-    Vue$1 = this
-  update(template)(true)
-  return rootDom
+function mount(target: any, template: string) {
+  return function(id: string) {
+    rootDom = document.getElementById(id)
+    update(target, template)()
+    return rootDom
+  }
 }
 
-function update(template: string) {
-  return function(initiate: boolean = false) {
-    let newVirturalDom: VIRTUAL_DOM_INTERFACE = parseTemplate.call(Vue$1, template, 0)
+function update(target: any, template: string): Function {
+  return function() {
+    let newVirturalDom: VIRTUAL_DOM_INTERFACE = parseTemplate(target)(template)
     updateThrottle(function() {
       if(rootDom) {
-        updateDocument(newVirturalDom, virturalDom, rootDom, initiate)
+        updateDocument(newVirturalDom, virturalDom, rootDom)
         virturalDom = newVirturalDom
       }
     })
