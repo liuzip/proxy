@@ -187,32 +187,15 @@ function clearRootDocument(root: any): void {
 function getDataValue(target: any): Function {
   return function(tag: VIRTUAL_DOM_INTERFACE): VIRTUAL_DOM_INTERFACE {
     let text: string = '' // 记录一段读取到得值
-    let equation: string = '' // 待计算得等式
     let textArray: string[] = [] // 数字记录计算得结果
     let innerText: string = tag.text // text数据
-    let shouldGetVueData: boolean = false // 是否text数据还是Vue映射得数据
 
-    for(let i: number = 0; i < innerText.length; i ++) {
-      if(!shouldGetVueData) {
-        if(innerText[i] === '{' && innerText[i + 1] === '{') { // 开始查找Vue里得数据
-          shouldGetVueData = true
-          textArray.push(text) // 记录一次数据
-          text = ''
-          i += 1
-        } else {
-          text += innerText[i] // 纯粹得text数据
-        }
-      }
-      else {
-        if(innerText[i] === '}' && innerText[i + 1] === '}') { // 读取完毕path，从Vue里查值
-          shouldGetVueData = false
-          i += 1
-          textArray.push(getEquatEionValue(target, equation))
-          equation = ''
-        } else 
-          equation += innerText[i] === ' ' ? '' : innerText[i] // 读取path
-      }
-    }
+    innerText.split(/\{\{(.+?)\}\}/g).map((val: string, index: number) => {
+      if(index % 2 === 0) { // 偶数就是字符，奇数就是表达式
+        textArray.push(val)
+      } else
+        textArray.push(getEquatEionValue(target, val))
+    })
 
     if(text)
       textArray.push(text)
