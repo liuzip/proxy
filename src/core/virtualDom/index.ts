@@ -1,5 +1,6 @@
-import { parseTemplate, updateDocument, VIRTUAL_DOM_INTERFACE } from './helpers'
 import throttle from '../../utils/throttle'
+import { VIRTUAL_DOM_INTERFACE } from '../interface/index'
+import { parseTemplate, updateDocument } from './helpers'
 
 let virturalDom: VIRTUAL_DOM_INTERFACE = null
 let rootDom: any = null
