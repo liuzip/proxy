@@ -1,22 +1,37 @@
-export function calculation(expression) {
+interface AST_NODE {
+  type: string
+  value: string
+  children?: AST_NODE[]
+}
+
+interface TOKEN_NODE { type: string, value: string }
+
+export function calculation(expression: string): Function {
   let tokens = tokenizer(expression)
   let ast = walker(tokens)()
-  return function calculateExpression(target, node = ast) {
+  return function calculateExpression(target: any, node: AST_NODE = ast): any {
     if(node.type === 'Parameter')
       return get(target, node.value, '')
     else {
       let left = calculateExpression(target, node.children[0])
       let right = calculateExpression(target, node.children[1])
-      let result
-      eval(`result = ${ left } ${ node.value } ${ right }`)
-      return result
+      switch(node.value) {
+        case '+':
+          return left + right
+        case '-':
+          return left - right
+        case '*':
+          return left * right
+        case '/':
+          return left / right
+      }
     }
   }
 }
 
 // helpers
 // 拆分操作符
-function tokenizer(expression) {
+function tokenizer(expression: string) :TOKEN_NODE[] {
   return expression.split(/(\+|-|\*|\/|\(|\))/g)
       .map(w => w.trim()).filter(Boolean)
       .map(w => {
@@ -50,23 +65,26 @@ function tokenizer(expression) {
 //   value: '', // 数值
 //   children: [Object, Object] // 如果是操作符，则具有俩子节点
 // }
-function walker(tokens) {
-  function isThereParenthesis(list) {
+function walker(tokens: TOKEN_NODE[]) {
+  function isThereParenthesis(list: TOKEN_NODE[]) {
     return [
-      list.findIndex(t => t.type === 'parenthesis' && t.value === '('),
-      findLastIndex.call(list, t => t.type === 'parenthesis' && t.value === ')')
+      list.findIndex((t: TOKEN_NODE) => t.type === 'parenthesis' && t.value === '('),
+      findLastIndex.call(list, (t: TOKEN_NODE) => t.type === 'parenthesis' && t.value === ')')
     ]
   }
   
-  function findLastIndex(cb) {
-    let index = this.map(t => t).reverse().findIndex(cb)
+  function findLastIndex(cb: Function) {
+    let index = this.map((t: TOKEN_NODE) => t).reverse().findIndex(cb)
     return index === -1 ? index : this.length - index - 1
   }
 
-  function isInvalidExpression() { throw Error('invalid expression') } // 异常表达式
-  function findOperator(operator) { return this.findIndex(t => t.type === 'operator' && operator.some(o => o === t.value))}
+  function isInvalidExpression() {
+    throw Error('invalid expression')
+    return { type: 'INVALID', value: '' }
+  } // 异常表达式
+  function findOperator(operator: string[]) { return this.findIndex((t: TOKEN_NODE) => t.type === 'operator' && operator.some(o => o === t.value))}
 
-  return function parser(start = 0, end = tokens.length) {
+  return function parser(start = 0, end = tokens.length): AST_NODE {
     if(tokens[start] && tokens[start].value === '(' && tokens[end - 1] && tokens[end - 1].value === ')') {
       start ++
       end --
@@ -134,7 +152,7 @@ function walker(tokens) {
 }
 
 // 获取指定路径上的结果
-function get(target, path, notFoundValue = undefined) {
+function get(target: any, path: string, notFoundValue: any = undefined) {
   if(/^\d+(\.\d+)?$/.test(path)) // 纯数字
     return path
   else {
@@ -142,7 +160,7 @@ function get(target, path, notFoundValue = undefined) {
 
     for(let i = 0; i < keyPath.length; i++) {
       if (target && target.hasOwnProperty(keyPath[i]))
-        target = target[keyPath[i]];
+        target = target[keyPath[i]]
       else
         return notFoundValue
     }
