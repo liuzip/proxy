@@ -4,6 +4,7 @@ export {
   updateDocument,
 }
 
+import { calculation } from './calculation'
 import { VIRTUAL_DOM_INTERFACE } from '../interface/index'
 
 function parseTemplate(target: any): Function {
@@ -201,12 +202,6 @@ function getEquatEionValue(target: any, equation: string): string {
 
   // 计算text值
   // TODO，每次将所有内容全部写入eval，实在浪费
-  let __res$1: any = ''
-  eval(`${ Object.keys(target)
-            .reduce((str, key) => {
-              str += typeof(target[key]) !== 'function' ?
-                      `let ${ key }=${ typeof(target[key]) === 'object' ? JSON.stringify(target[key]) : target[key] };` : ''
-              return str
-            }, '') }; __res$1 = ${ equation };`)
+  let __res$1: any = calculation(equation)(target)
   return <string>__res$1
 }
