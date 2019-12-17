@@ -2,10 +2,9 @@ import { calculation } from '../utils/calculation'
 import directiveHandlers from './directives/index'
 import { VIRTUAL_DOM_INTERFACE } from '../../interface/index'
 
-export default function parseTemplate(target: any): Function {
-  let getValue = getDataValue(target)
-  let directive = directiveHandlers(target)
+export { parseTemplate, updateDirectives }
 
+function parseTemplate(target: any): Function {
   return function parseWithThis(template: string, start: number = 0, parent: VIRTUAL_DOM_INTERFACE = null): VIRTUAL_DOM_INTERFACE {
     let tag: VIRTUAL_DOM_INTERFACE = {
       parent,
@@ -36,7 +35,7 @@ export default function parseTemplate(target: any): Function {
           } else if(template[j] === '/' && template[j + 1] === '>') {
             tag.closed = true // 形如“<div/>”当前tag已经封闭
             tag.position.end = j + 1
-            return directive(getValue(tag))
+            return tag
           } else
             tag.name += template[j]
         }
@@ -45,7 +44,7 @@ export default function parseTemplate(target: any): Function {
         if(template[i] === '/' && template[i + 1] === '>') {
           tag.closed = true // 形如“<div asd="123" />”当前tag已经封闭
           tag.position.end = i + 1
-          return directive(getValue(tag))
+          return tag
         } else if(template[i] === ' ') {
           // 跳过attribute之间的空格
           continue
@@ -56,16 +55,32 @@ export default function parseTemplate(target: any): Function {
           // 处理attribute
           let attributeName: string = ''
           let attributeValue: string = ''
-          let startQuote: string = ''
+          let startQuote: string = '' // 开始时的引号
           let isHandleValue: boolean = false
+          let isAttributeNameGetBlank: boolean = false // 用来处理，多个单独的属性排列
           let j: number = i
-    
+
           for(; j < template.length; j ++) {
             if(!isHandleValue) {
               if(template[j] === '=')
                 isHandleValue = true // 开始处理属性值
-              else if(template[j] !== ' ')
-                attributeName += template[j]
+              else if(template[j] === '/' && template[j + 1] === '>') {
+                tag.attribute[attributeName] = attributeValue
+                tag.closed = true // 形如“<div asd/>”当前tag已经封闭
+                tag.position.end = j + 1
+                return tag
+              } else if(template[j] === '>') {
+                currentPositon = 'content' // tag前半部分已完结如“<div asd>”
+                break
+              } else if(template[j] !== ' ') {
+                if(!isAttributeNameGetBlank)
+                  attributeName += template[j]
+                else {
+                  j --
+                  break
+                }
+              } else
+                isAttributeNameGetBlank = true // 属性名遇到空格了
             } else {
               if(!startQuote && (template[j] === "'" || template[j] === '"'))
                 startQuote = template[j] // 找到属性值的开始
@@ -85,7 +100,7 @@ export default function parseTemplate(target: any): Function {
             template.substr((i + 2), tag.name.length) === tag.name ) {
           tag.closed = true // 形如“</div>”，当前tag已经封闭
           tag.position.end = i + tag.name.length + 2
-          return directive(getValue(tag))
+          return tag
         } else if(template[i] === '<' && template[i + 1] !== '/') {
           let subNode: VIRTUAL_DOM_INTERFACE = parseWithThis(template, i, tag)
           tag.children.push(subNode)
@@ -97,7 +112,18 @@ export default function parseTemplate(target: any): Function {
     }
   
     tag.position.end = template.length - 1
-    return directive(getValue(tag))
+    return tag
+  }
+}
+
+function updateDirectives(target: any): Function {
+  let getValue = getDataValue(target)
+  let directive = directiveHandlers(target)
+  return function update(node: VIRTUAL_DOM_INTERFACE): void {
+    node = directive(getValue(node))
+    for(let i = 0; i < node.children.length; i ++) {
+      update(node.children[i])
+    }
   }
 }
 
