@@ -34,11 +34,18 @@ function updateExistedDocument(newVd: VIRTUAL_DOM_INTERFACE, oldVd: VIRTUAL_DOM_
 
 interface ATTRIBUTE_MAP_INTERFACE {
   'class': Function
+  'style': Function
 }
 
 const ATTRIBUTE_MAP: ATTRIBUTE_MAP_INTERFACE = {
   'class': (classStr: string, dom: any) => {
     classStr.split(' ').forEach(val => dom.classList.add(val.trim()))
+  },
+  'style': (styleStr: string, dom: any) => {
+    styleStr.split(';').forEach(s => {
+      let [ name, value ] = s.split(':').map(v => v.trim())
+      dom.style[name] = value
+    })
   }
 }
 

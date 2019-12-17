@@ -26,16 +26,7 @@ export function calculation(expression: string): Function {
     } else {
       let left = calculateExpression(target, node.children[0])
       let right = calculateExpression(target, node.children[1])
-      switch(node.value) {
-        case '+':
-          return left + right
-        case '-':
-          return left - right
-        case '*':
-          return left * right
-        case '/':
-          return left / right
-      }
+      return eval(`${ left } ${ node.value } ${ right }`)
     }
   }
 }
@@ -43,12 +34,13 @@ export function calculation(expression: string): Function {
 // helpers
 // 拆分操作符
 function tokenizer(expression: string) :TOKEN_NODE[] {
-  return expression.split(/(\+|-|\*|\/|\(|\))/g)
+  return expression.split(/(\+|-|\*|\/|\(|\)|\>|<|===|==|\<=|\>=)/g)
       .map(w => w.trim()).filter(Boolean)
       .map(w => {
         if(w === '(' || w === ')')
           return { type: 'parenthesis', value: w }
-        else if(w === '+' || w === '-' || w === '*' || w === '/')
+        else if(w === '+' || w === '-' || w === '*' || w === '/' || w === '>' || w === '<' ||
+            w === '===' || w === '==' || w === '<=' || w === '>=')
           return { type: 'operator', value: w }
         else
           return { type: 'parameter', value: w }
@@ -121,10 +113,11 @@ function walker(tokens: TOKEN_NODE[]) {
     if(list.length === 1) // 只有一个点，只能是数值
         return list[0].type === 'parameter' ? { type: 'Parameter', value: list[0].value } : isInvalidExpression(list)
     else if(sp === -1 && ep === -1) {
-      let lowerOperator = findOperator.call(list, ['+', '-'] ) // 首个低级操作符
-      let operator = (lowerOperator === -1 ?
-                      findOperator.call(list, ['*', '/'] ) :
-                      lowerOperator) + start // 待分类的操作符
+      let operator = findOperator.call(list, ['===', '==', '<', '>', '<=', '>=']) // 首个低级操作符
+      operator = operator === -1 ? findOperator.call(list, ['+', '-']) : operator // 次级
+      operator = operator === -1 ? findOperator.call(list, ['*', '/']) : operator // 最高级
+      operator += start // 待分类的操作符
+
       if(operator < start)
         return isInvalidExpression(list) // 没找到操作符
       else
@@ -138,8 +131,24 @@ function walker(tokens: TOKEN_NODE[]) {
         }
     }
     else if(sp !== -1 && ep !== -1) {
-      let operator = findOperator.call(list.slice(0, sp), ['+', '-'] ) // 括号左半部分低级操作符
+      let operator = -1 // 括号左半部分低级操作符
       let offset = 0
+
+      if(operator === -1) { // 括号左半部分低级操作符
+        operator = findOperator.call(list.slice(0, sp), ['===', '==', '<', '>', '<=', '>='])
+        offset = 0
+      }
+
+      if(operator === -1) { // 括号右半部分低级操作符
+        operator = findOperator.call(list.slice(ep, list.length), ['===', '==', '<', '>', '<=', '>='])
+        offset = ep
+      }
+
+      if(operator === -1) { // 括号左半部分低级操作符
+        operator = findOperator.call(list.slice(0, sp), ['+', '-'] )
+        offset = 0
+      }
+
       if(operator === -1) { // 括号右半部分低级操作符
         operator = findOperator.call(list.slice(ep, list.length), ['+', '-'] )
         offset = ep

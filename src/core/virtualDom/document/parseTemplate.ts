@@ -1,14 +1,16 @@
 import { calculation } from '../utils/calculation'
+import directiveHandlers from './directives/index'
 import { VIRTUAL_DOM_INTERFACE } from '../../interface/index'
 
 export default function parseTemplate(target: any): Function {
   let getValue = getDataValue(target)
+  let directive = directiveHandlers(target)
 
-  return function parseWithThis(template: string, start: number = 0): VIRTUAL_DOM_INTERFACE {
+  return function parseWithThis(template: string, start: number = 0, parent: VIRTUAL_DOM_INTERFACE = null): VIRTUAL_DOM_INTERFACE {
     let tag: VIRTUAL_DOM_INTERFACE = {
+      parent,
       name: '',
       text: '',
-      parent: null,
       children: [],
       closed: false,
       textValue: '',
@@ -34,8 +36,7 @@ export default function parseTemplate(target: any): Function {
           } else if(template[j] === '/' && template[j + 1] === '>') {
             tag.closed = true // 形如“<div/>”当前tag已经封闭
             tag.position.end = j + 1
-            tag = getValue(tag)
-            return tag
+            return directive(getValue(tag))
           } else
             tag.name += template[j]
         }
@@ -44,8 +45,7 @@ export default function parseTemplate(target: any): Function {
         if(template[i] === '/' && template[i + 1] === '>') {
           tag.closed = true // 形如“<div asd="123" />”当前tag已经封闭
           tag.position.end = i + 1
-          tag = getValue(tag)
-          return tag
+          return directive(getValue(tag))
         } else if(template[i] === ' ') {
           // 跳过attribute之间的空格
           continue
@@ -85,10 +85,9 @@ export default function parseTemplate(target: any): Function {
             template.substr((i + 2), tag.name.length) === tag.name ) {
           tag.closed = true // 形如“</div>”，当前tag已经封闭
           tag.position.end = i + tag.name.length + 2
-          tag = getValue(tag)
-          return tag
+          return directive(getValue(tag))
         } else if(template[i] === '<' && template[i + 1] !== '/') {
-          let subNode: VIRTUAL_DOM_INTERFACE = parseWithThis(template, i)
+          let subNode: VIRTUAL_DOM_INTERFACE = parseWithThis(template, i, tag)
           tag.children.push(subNode)
           i = subNode.position.end
         } else {
@@ -98,8 +97,7 @@ export default function parseTemplate(target: any): Function {
     }
   
     tag.position.end = template.length - 1
-    tag = getValue(tag)
-    return tag
+    return directive(getValue(tag))
   }
 }
 
