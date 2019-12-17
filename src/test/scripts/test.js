@@ -11,7 +11,7 @@ let app = Vue({
       }
     }
   },
-  template: '<ul><li class="first">att1 {{ att1 }}</li><li>{{ attribute.val }}</li><li>attribute.val {{ attribute.val + add * arrayLength }}</li></ul>',
+  template: '<ul><li class="first">att1 {{ multiple() * Math.ceil(Math.random() * 10) }}</li><li class="second">function {{ Math.round(Math.random() * 10) }}</li><li>{{ attribute.val }}</li><li>attribute.val {{ attribute.val + add * arrayLength }}</li></ul>',
   computed: {
     constVal() { return SOURCE_MAP },
     special() { return this.attribute.val + this.attribute.arr[0] },

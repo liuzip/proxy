@@ -12,7 +12,18 @@ export function calculation(expression: string): Function {
   return function calculateExpression(target: any, node: AST_NODE = ast): any {
     if(node.type === 'Parameter')
       return get(target, node.value, '')
-    else {
+    else if(node.type === 'Function') {
+      let func = get(target, node.value, function(){})
+      let arg = node.children[0].type !== 'Empty' ? calculateExpression(target, node.children[0]) : ''
+      if(window && get(window, node.value) === void 0) {
+        func = get(target, node.value, function(){})
+        return func.call(target, arg)
+      }
+      else {
+        func = get(window, node.value)
+        return func(arg)
+      }
+    } else {
       let left = calculateExpression(target, node.children[0])
       let right = calculateExpression(target, node.children[1])
       switch(node.value) {
@@ -61,26 +72,39 @@ function tokenizer(expression: string) :TOKEN_NODE[] {
 
 // 生成的数据结构应该能够表明四则运算的操作顺序
 // {
-//   type: '', // Operator - 操作符 Parameter - 操作对象
+//   type: '', // Operator - 操作符 Parameter - 操作对象 Function - 函数
 //   value: '', // 数值
 //   children: [Object, Object] // 如果是操作符，则具有俩子节点
 // }
 function walker(tokens: TOKEN_NODE[]) {
+  const EMPTY_NODE: AST_NODE = { type: 'Empty', value: '' }
+
   function isThereParenthesis(list: TOKEN_NODE[]) {
-    return [
-      list.findIndex((t: TOKEN_NODE) => t.type === 'parenthesis' && t.value === '('),
-      findLastIndex.call(list, (t: TOKEN_NODE) => t.type === 'parenthesis' && t.value === ')')
-    ]
-  }
-  
-  function findLastIndex(cb: Function) {
-    let index = this.map((t: TOKEN_NODE) => t).reverse().findIndex(cb)
-    return index === -1 ? index : this.length - index - 1
+    let sp = list.findIndex((t: TOKEN_NODE) => t.type === 'parenthesis' && t.value === '(')
+    return [ sp, findNextParenthesis(list)(sp) ]
   }
 
-  function isInvalidExpression() {
-    throw Error('invalid expression')
-    return { type: 'INVALID', value: '' }
+  function findNextParenthesis(list: TOKEN_NODE[]) { // 找到对应匹配的反括号
+    let parenthesisLevel = 1 // 括号层级数
+    return function(sp: number) {
+      for(let index = sp + 1; index < list.length; index ++) {
+        if(list[index].type === 'parenthesis') {
+          if(list[index].value === ')' && parenthesisLevel === 1)
+            return index
+          else if(list[index].value === '(')
+            parenthesisLevel ++
+          else if(list[index].value === ')')
+            parenthesisLevel --
+        } 
+      }
+      return -1
+    }
+  }
+
+  function isInvalidExpression(exp: TOKEN_NODE[]) {
+    let line = exp.map(e => e.value).join('')
+    throw Error(`invalid expression => ${ line }`)
+    return EMPTY_NODE
   } // 异常表达式
   function findOperator(operator: string[]) { return this.findIndex((t: TOKEN_NODE) => t.type === 'operator' && operator.some(o => o === t.value))}
 
@@ -91,20 +115,20 @@ function walker(tokens: TOKEN_NODE[]) {
     }
 
     if(start >= end) // 取完了，或者传入得是类似()这般得表达式
-      return null
+      return EMPTY_NODE
   
     let list = tokens.slice(start, end) // 待处理得字段
     let [ sp, ep ] = isThereParenthesis(list)
 
-    if(list.length === 1) // 只有一个点，只能是数字
-        return list[0].type === 'parameter' ? { type: 'Parameter', value: list[0].value } : isInvalidExpression()
+    if(list.length === 1) // 只有一个点，只能是数值
+        return list[0].type === 'parameter' ? { type: 'Parameter', value: list[0].value } : isInvalidExpression(list)
     else if(sp === -1 && ep === -1) {
       let lowerOperator = findOperator.call(list, ['+', '-'] ) // 首个低级操作符
       let operator = (lowerOperator === -1 ?
                       findOperator.call(list, ['*', '/'] ) :
                       lowerOperator) + start // 待分类的操作符
       if(operator < start)
-        isInvalidExpression() // 没找到操作符
+        return isInvalidExpression(list) // 没找到操作符
       else
         return {
           type: 'Operator',
@@ -143,16 +167,26 @@ function walker(tokens: TOKEN_NODE[]) {
             parser(operator + 1, end)
           ]
         }
+      } else if(list[sp - 1] && list[sp - 1].type === 'parameter') { // 左侧是函数
+        operator = (start + sp - 1)
+        return {
+          type: 'Function',
+          value: tokens[operator].value,
+          children: [
+            parser(start + sp, end),
+            EMPTY_NODE
+          ]
+        }
       } else
-        isInvalidExpression() // 括号两侧没有操作符，直接接了数字
+        return isInvalidExpression(list) // 括号两侧没有操作符，直接接了数字
     }
     else
-      isInvalidExpression()
+      return isInvalidExpression(list)
   }
 }
 
 // 获取指定路径上的结果
-function get(target: any, path: string, notFoundValue: any = undefined) {
+function get(target: any, path: string, notFoundValue: any = void 0) {
   if(/^\d+(\.\d+)?$/.test(path)) // 纯数字
     return path
   else {
