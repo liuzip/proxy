@@ -81,24 +81,22 @@ function walker(tokens: TOKEN_NODE[]) {
 
   function isThereParenthesis(list: TOKEN_NODE[]) {
     let sp = list.findIndex((t: TOKEN_NODE) => t.type === 'parenthesis' && t.value === '(')
-    return [ sp, findNextParenthesis(list)(sp) ]
+    return [ sp, findNextParenthesis(list, sp) ]
   }
 
-  function findNextParenthesis(list: TOKEN_NODE[]) { // 找到对应匹配的反括号
+  function findNextParenthesis(list: TOKEN_NODE[], sp: number): number { // 找到对应匹配的反括号
     let parenthesisLevel = 1 // 括号层级数
-    return function(sp: number) {
-      for(let index = sp + 1; index < list.length; index ++) {
-        if(list[index].type === 'parenthesis') {
-          if(list[index].value === ')' && parenthesisLevel === 1)
-            return index
-          else if(list[index].value === '(')
-            parenthesisLevel ++
-          else if(list[index].value === ')')
-            parenthesisLevel --
-        } 
-      }
-      return -1
+    for(let index = sp + 1; index < list.length; index ++) {
+      if(list[index].type === 'parenthesis') {
+        if(list[index].value === ')' && parenthesisLevel === 1)
+          return index
+        else if(list[index].value === '(')
+          parenthesisLevel ++
+        else if(list[index].value === ')')
+          parenthesisLevel --
+      } 
     }
+    return -1
   }
 
   function isInvalidExpression(exp: TOKEN_NODE[]) {

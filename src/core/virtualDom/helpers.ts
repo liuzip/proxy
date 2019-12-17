@@ -1,5 +1,4 @@
 export {
-  VIRTUAL_DOM_INTERFACE,
   parseTemplate,
   updateDocument,
 }
@@ -200,8 +199,7 @@ function getEquatEionValue(target: any, equation: string): string {
   if(!target) 
     return ''
 
-  // 计算text值
-  // TODO，每次将所有内容全部写入eval，实在浪费
+  // 计算指定的参数值
   let __res$1: any = calculation(equation)(target)
   return <string>__res$1
 }
