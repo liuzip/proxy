@@ -1,8 +1,7 @@
 import updateDocument from './updateDocument'
-import { parseTemplate, updateDirectives } from './parseTemplate'
+import { parseTemplate } from './parseTemplate'
 
 export {
   parseTemplate,
-  updateDocument,
-  updateDirectives
+  updateDocument
 }

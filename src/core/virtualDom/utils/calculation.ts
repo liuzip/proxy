@@ -134,32 +134,32 @@ function walker(tokens: TOKEN_NODE[]) {
       let operator = -1 // 括号左半部分低级操作符
       let offset = 0
 
-      if(operator === -1) { // 括号左半部分低级操作符
+      if(operator === -1) { // 括号左半部分三级操作符
         operator = findOperator.call(list.slice(0, sp), ['===', '==', '<', '>', '<=', '>='])
         offset = 0
       }
 
-      if(operator === -1) { // 括号右半部分低级操作符
+      if(operator === -1) { // 括号右半部分三级操作符
         operator = findOperator.call(list.slice(ep, list.length), ['===', '==', '<', '>', '<=', '>='])
         offset = ep
       }
 
-      if(operator === -1) { // 括号左半部分低级操作符
+      if(operator === -1) { // 括号左半部分二级操作符
         operator = findOperator.call(list.slice(0, sp), ['+', '-'] )
         offset = 0
       }
 
-      if(operator === -1) { // 括号右半部分低级操作符
+      if(operator === -1) { // 括号右半部分二级操作符
         operator = findOperator.call(list.slice(ep, list.length), ['+', '-'] )
         offset = ep
       }
         
-      if(operator === -1) { // 括号左半部分高级操作符
+      if(operator === -1) { // 括号左半部分一级操作符
         operator = findOperator.call(list.slice(0, sp), ['*', '/'] )
         offset = 0
       }
 
-      if(operator === -1) { // 括号右半部分高级操作符
+      if(operator === -1) { // 括号右半部分一级操作符
         operator = findOperator.call(list.slice(ep, list.length), ['*', '/'] )
         offset = ep
       }

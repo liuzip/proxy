@@ -26,7 +26,8 @@ export interface VIRTUAL_DOM_INTERFACE {
   closed: boolean // 是否执行完了闭合标签
   textValue: string // text对应得具体内容
   documentNode: any // node节点
+  privateParams?: any // 一些私有的属性，譬如由v-for生成出来的
   position: POSITION_INTERFACE // 在template中得位置
-  parent?: VIRTUAL_DOM_INTERFACE // 父节点
+  parent: VIRTUAL_DOM_INTERFACE // 父节点
   children: Array<VIRTUAL_DOM_INTERFACE> // 子节点
 }

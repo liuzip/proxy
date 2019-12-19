@@ -11,7 +11,7 @@ let app = Vue({
       }
     }
   },
-  template: '<ul><li class="first">att1 {{ multiple() * Math.ceil(Math.random() * 10) }}</li><li class="second">function {{ Math.round(Math.random() * 10) }}</li><li v-if="att2 > 0.6">att2 {{ att2 }}</li><li v-else-if="att2 < 0.3">att2-else-if {{ att2 }}</li><li v-else>att2-else {{ att2 }}</li><li>attribute.val {{ attribute.val + add * arrayLength }}</li></ul>',
+  template: '<ul><li v-for="(li, ai) in attribute.arr">{{ li + ai + att1 }}</li></ul>',
   computed: {
     constVal() { return SOURCE_MAP },
     special() { return this.attribute.val + this.attribute.arr[0] },
@@ -72,5 +72,4 @@ app.$mount('app')
 
 setInterval(() => {
   app.att1 = app.att1 > 100 ? 0 : app.att1 + 1
-  app.att2 = Math.random()
 }, 1000)

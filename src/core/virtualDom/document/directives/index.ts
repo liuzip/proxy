@@ -14,14 +14,15 @@ v-pre
 v-cloak
 v-once
 */
-
 import vIf from './if'
+import vFor from './for'
 import { VIRTUAL_DOM_INTERFACE } from '../../../interface/index'
 
 export default function directiveHandlers(target: any) {
   let ifHandler = vIf(target)
+  let forHandler = vFor(target)
   return function(tag: VIRTUAL_DOM_INTERFACE) {
-    ifHandler(tag)
-    return tag
+    return [ forHandler, ifHandler ]
+            .reduce((tag, handler) => handler(tag), tag)
   }
 }

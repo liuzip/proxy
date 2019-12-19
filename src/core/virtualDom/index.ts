@@ -1,6 +1,6 @@
 import throttle from '../../utils/throttle'
 import { VIRTUAL_DOM_INTERFACE } from '../interface/index'
-import { parseTemplate, updateDocument, updateDirectives } from './document/index'
+import { parseTemplate, updateDocument } from './document/index'
 
 let virturalDom: VIRTUAL_DOM_INTERFACE = null
 let rootDom: any = null
@@ -17,8 +17,6 @@ function mount(target: any, template: string) {
 function update(target: any, template: string): Function {
   return function() {
     let newVirturalDom: VIRTUAL_DOM_INTERFACE = parseTemplate(target)(template)
-    updateDirectives(target)(newVirturalDom)
-
     updateThrottle(function() {
       if(rootDom) {
         updateDocument(newVirturalDom, virturalDom, rootDom)

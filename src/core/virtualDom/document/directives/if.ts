@@ -2,7 +2,7 @@ import { calculation } from '../../utils/calculation'
 import { VIRTUAL_DOM_INTERFACE } from '../../../interface/index'
 
 export default function vIf(target: any): Function {
-  return function(node: VIRTUAL_DOM_INTERFACE): void {
+  return function(node: VIRTUAL_DOM_INTERFACE): VIRTUAL_DOM_INTERFACE {
     if(node.attribute['v-if']) {
       let res = calculation(node.attribute['v-if'])(target)
       node.attribute['style'] = `${ node.attribute['style'] || '' }${ res ? '' : 'display: none;' }`
@@ -15,6 +15,8 @@ export default function vIf(target: any): Function {
           vElse(next, res)
       }
     }
+
+    return node
   }
 }
 
