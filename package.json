@@ -10,6 +10,12 @@
     "webpack-cli": "^3.3.10"
   },
   "devDependencies": {
+    "eslint": "^6.7.2",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
     "webpack-dev-server": "^3.9.0"
   },
   "scripts": {
@@ -25,6 +31,9 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/liuzip/proxy/issues"
+  },
+  "lint-staged": {
+    "src/core/**/*.{ts,js}": "eslint"
   },
   "homepage": "https://github.com/liuzip/proxy#readme"
 }
