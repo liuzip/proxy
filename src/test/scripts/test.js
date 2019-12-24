@@ -11,7 +11,7 @@ let app = Vue({
       }
     }
   },
-  template: '<ul><li v-for="(li, ai) in attribute.arr">{{ li + ai + att1 }}</li></ul>',
+  template: '<ul><li v-for="(li, ai) in attribute.arr">{{ li + ai + att1 }}</li><input type="text" :value="att1" /></ul>',
   computed: {
     constVal() { return SOURCE_MAP },
     special() { return this.attribute.val + this.attribute.arr[0] },

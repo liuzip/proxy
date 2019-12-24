@@ -16,13 +16,15 @@ v-once
 */
 import vIf from './if'
 import vFor from './for'
+import vParams from './default'
 import { VIRTUAL_DOM_INTERFACE } from '../../../interface/index'
 
 export default function directiveHandlers(target: any) {
   let ifHandler = vIf(target)
   let forHandler = vFor(target)
+  let defaultHandler = vParams(target)
   return function(tag: VIRTUAL_DOM_INTERFACE) {
-    return [ forHandler, ifHandler ]
+    return [ forHandler, ifHandler, defaultHandler ]
             .reduce((tag, handler) => handler(tag), tag)
   }
 }
