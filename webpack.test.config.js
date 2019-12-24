@@ -13,7 +13,7 @@ module.exports = {
     host: 'localhost',
     port: 8080,
     open: true,
-    inline: true,
+    inline: true
   },
   devtool: 'source-map',
   resolve: {
