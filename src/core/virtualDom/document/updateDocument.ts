@@ -62,7 +62,9 @@ function createDocumentNode(vd: VIRTUAL_DOM_INTERFACE): any {
 
 function isSame(n1: VIRTUAL_DOM_INTERFACE, n2: VIRTUAL_DOM_INTERFACE): boolean {
   return (n1.name === n2.name) && // same tag
-          (n1.textValue === n2.textValue) // same text
+          (n1.textValue === n2.textValue) && // same text
+          (!Object.keys(n1.attribute).some(attr => n1.attribute[attr] !== n2.attribute[attr])) && // same attribute
+          (!Object.keys(n2.attribute).some(attr => n1.attribute[attr] !== n2.attribute[attr])) // same attribute
 }
 
 // 将指定得root节点全部给清理干净
