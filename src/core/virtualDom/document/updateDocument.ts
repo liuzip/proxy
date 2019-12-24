@@ -23,6 +23,19 @@ function updateExistedDocument(newVd: VIRTUAL_DOM_INTERFACE, oldVd: VIRTUAL_DOM_
       newVd.children[i].documentNode = oldVd.children[i].documentNode // 相同得化，旧节点不再处理，去找子节点
       updateExistedDocument(newVd.children[i], oldVd.children[i])
     }
+  } else if(newVd.name === oldVd.name) { // 尽量不要替换节点
+    oldVd.documentNode.innerText = newVd.textValue
+
+    Object.keys(newVd.attribute).forEach((key: string) => {
+      if(newVd.attribute[key] === oldVd.attribute[key]) // 相同就不用更新了
+        return true
+
+      if(typeof(ATTRIBUTE_MAP[key]) === 'function') {
+        ATTRIBUTE_MAP[key](newVd.attribute[key], oldVd.documentNode)
+      } else {
+        oldVd.documentNode.setAttribute(key, newVd.attribute[key])
+      }
+    })
   } else { // 一旦当前节点有不同，更新当前节点得所有剩余节点
     newVd.documentNode = createDocumentNode(newVd)
     oldVd.documentNode.replaceWith(newVd.documentNode) // 替换当前节点
