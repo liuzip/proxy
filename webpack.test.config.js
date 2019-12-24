@@ -5,11 +5,11 @@ module.exports = {
   mode: 'development',
   entry: './src/core/index.ts',
   output: {
-    path: path.resolve(__dirname + '/src/test/dist'),
+    path: path.resolve(__dirname + '/test/dist'),
     filename: 'core.bundle.js'
   },
   devServer: {
-    contentBase: path.resolve(__dirname + '/src/test'),
+    contentBase: path.resolve(__dirname + '/test'),
     host: 'localhost',
     port: 8080,
     open: true,

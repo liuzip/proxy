@@ -3,7 +3,7 @@ yarn.lock
 package-lock.json
 node_modules/
 /dist/
-/src/test/dist/
+/test/dist/
 
 # Editor directories and files
 .idea
